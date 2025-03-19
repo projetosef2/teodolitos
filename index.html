@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Teodolito com Cálculo de Altura e Distância</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 400px;
+            position: relative;
+            border-bottom: 2px solid black;
+            background-image: url('imagens/fundo.jpg'); /* Caminho correto para a imagem */
+            background-size: cover;
+            background-position: center;
+        }
+        .linha {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: red;
+            transform-origin: top center;
+            bottom: 0;
+            left: 0;
+        }
+        .objeto {
+            width: 50px;
+            background: blue;
+            position: absolute;
+            bottom: 0;
+            right: 50px;
+            transition: height 0.2s ease-out;
+        }
+        .visor {
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .calculadora {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulador de Teodolito</h1>
+    <div class="container">
+        <div class="linha" id="linha"></div>
+        <div class="objeto" id="objeto"></div>
+    </div>
+    <div>
+        <label>Ângulo Vertical: <span id="anguloV">0</span>°</label><br>
+        <input type="range" id="controleV" min="-90" max="90" value="0">
+    </div>
+    <div>
+        <label>Distância ou Altura:</label><br>
+        <input type="number" id="distancia" value="10" placeholder="Digite a distância ou altura">
+    </div>
+    <div>
+        <label for="calcular">Escolha a opção:</label>
+        <select id="calcular">
+            <option value="altura">Calcular Altura</option>
+            <option value="distancia">Calcular Distância</option>
+        </select>
+    </div>
+    <div class="visor">
+        Leitura: <span id="leitura">0°</span>
+    </div>
+    <div class="calculadora">
+        <h2>Calculadora Trigonométrica</h2>
+        <p>Altura Calculada: <span id="altura">0</span> m</p>
+        <p>Distância Calculada: <span id="distanciaCalc">0</span> m</p>
+        <p>Seno: <span id="seno">0</span></p>
+        <p>Cosseno: <span id="cosseno">0</span></p>
+        <p>Tangente: <span id="tangente">0</span></p>
+    </div>
+    <script>
+        const controleV = document.getElementById('controleV');
+        const distancia = document.getElementById('distancia');
+        const anguloV = document.getElementById('anguloV');
+        const linha = document.getElementById('linha');
+        const leitura = document.getElementById('leitura');
+        const objeto = document.getElementById('objeto');
+        const altura = document.getElementById('altura');
+        const distanciaCalc = document.getElementById('distanciaCalc');
+        const seno = document.getElementById('seno');
+        const cosseno = document.getElementById('cosseno');
+        const tangente = document.getElementById('tangente');
+        const calcular = document.getElementById('calcular');
+
+        // Carregar o som
+        const som = new Audio('imagens/som.mp3');  // Caminho para o arquivo de áudio
+
+        function atualizarTeodolito() {
+            let v = parseFloat(controleV.value); // Agora positivo quando desliza para a direita
+            const inputValor = parseFloat(distancia.value);
+            const radianos = v * (Math.PI / 180);
+            const modoCalculo = calcular.value;
+            
+            anguloV.textContent = v;
+            // Aqui invertemos o sinal da rotação para que a linha incline de maneira contrária
+            linha.style.transform = `rotate(${-v}deg)`; // Linha gira na direção contrária
+            leitura.textContent = `${v}°`;
+
+            // Atualizar com base na opção escolhida: altura ou distância
+            if (modoCalculo === 'altura') {
+                const alturaCalc = Math.tan(radianos) * inputValor;
+                altura.textContent = alturaCalc.toFixed(2);
+                distanciaCalc.textContent = '-'; // Não mostrar a distância
+                // Ajustar a altura do objeto na simulação
+                objeto.style.height = `${alturaCalc * 10}px`; // Crescer o objeto para cima
+                objeto.style.bottom = `0px`; // Manter o fundo do objeto fixo
+            } else if (modoCalculo === 'distancia') {
+                // Calcular a distância a partir da altura informada
+                const distanciaCalcValue = inputValor / Math.tan(radianos);
+                distanciaCalc.textContent = distanciaCalcValue.toFixed(2);
+                altura.textContent = '-'; // Não mostrar a altura
+                // Calcular a altura com base na distância
+                const alturaCalc = Math.tan(radianos) * distanciaCalcValue;
+                objeto.style.height = `${alturaCalc * 10}px`; // Ajustar a altura do objeto na simulação
+                objeto.style.bottom = `0px`; // Manter o fundo do objeto fixo
+            }
+
+            // Cálculo trigonométrico
+            seno.textContent = Math.sin(radianos).toFixed(4);
+            cosseno.textContent = Math.cos(radianos).toFixed(4);
+            tangente.textContent = Math.tan(radianos).toFixed(4);
+
+            // Tocar o som sempre que o ângulo for alterado
+            som.play();
+        }
+
+        controleV.addEventListener('input', atualizarTeodolito);
+        distancia.addEventListener('input', atualizarTeodolito);
+        calcular.addEventListener('change', atualizarTeodolito);
+    </script>
+</body>
+</html>
